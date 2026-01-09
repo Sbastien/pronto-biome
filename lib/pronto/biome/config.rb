@@ -17,28 +17,19 @@ module Pronto
     #
     # Available options:
     # - biome_executable: Command to run Biome (default: 'biome')
-    # - files_to_lint: Regex or list of extensions to lint
     # - cmd_line_opts: Additional CLI options for Biome
     class Config
       CONFIG_FILE = '.pronto_biome.yml'
 
-      attr_reader :biome_executable, :files_to_lint, :cmd_line_opts
+      attr_reader :biome_executable, :cmd_line_opts
 
       def initialize(repo_path)
         options = load_options(repo_path)
 
         @biome_executable = resolve_executable(options).freeze
-        @files_to_lint = resolve_files_to_lint(options)
         @cmd_line_opts = (options['cmd_line_opts'] || '').freeze
 
         freeze
-      end
-
-      # Returns true if the file path matches the lint pattern (or no filter is set).
-      def lint_file?(path)
-        return true unless @files_to_lint
-
-        @files_to_lint.match?(path.to_s)
       end
 
       private
@@ -62,25 +53,6 @@ module Pronto
 
       def resolve_executable(options)
         ENV.fetch('BIOME_EXECUTABLE', nil) || options['biome_executable'] || 'biome'
-      end
-
-      # Converts files_to_lint to a Regexp if provided.
-      # Accepts: Regexp, string pattern (e.g., '\\.vue$'), or array of extensions (['js', 'ts'])
-      # Returns nil if not configured (all files sent to Biome).
-      def resolve_files_to_lint(options)
-        value = options['files_to_lint']
-        return nil unless value
-
-        case value
-        when Regexp then value
-        when Array then array_to_regexp(value)
-        else Regexp.new(value.to_s)
-        end
-      end
-
-      def array_to_regexp(extensions)
-        normalized = extensions.map { |ext| ext.to_s.delete_prefix('.') }
-        Regexp.new("\\.(#{normalized.join('|')})$")
       end
     end
   end

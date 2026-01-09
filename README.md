@@ -59,7 +59,6 @@ pronto run -c origin/main -f github_pr --runner biome
 ```yaml
 biome:
   biome_executable: npx biome
-  files_to_lint: '\.(js|ts|jsx|tsx|vue)$'
   cmd_line_opts: '--config-path=custom-biome.json'
 ```
 
@@ -67,16 +66,16 @@ biome:
 
 ```yaml
 biome_executable: ./node_modules/.bin/biome
-files_to_lint: '\.(js|ts|jsx|tsx)$'
 ```
 
 ### Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `biome_executable` | Command to run Biome | `biome` |
-| `files_to_lint` | Regex or array to filter files | *(all files)* |
-| `cmd_line_opts` | Additional Biome CLI options | *(none)* |
+| Option             | Description                    | Default  |
+|--------------------|--------------------------------|----------|
+| `biome_executable` | Command to run Biome           | `biome`  |
+| `cmd_line_opts`    | Additional Biome CLI options   | *(none)* |
+
+> **Note:** File filtering is handled by Biome's own configuration (`biome.json`). Use Biome's `include`/`exclude` options to control which files are linted.
 
 ### Environment Variables
 

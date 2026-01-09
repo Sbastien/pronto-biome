@@ -20,10 +20,6 @@ RSpec.describe Pronto::Biome::Config do
       expect(config.biome_executable).to eq('biome')
     end
 
-    it 'has no default files_to_lint filter' do
-      expect(config.files_to_lint).to be_nil
-    end
-
     it 'has default cmd_line_opts' do
       expect(config.cmd_line_opts).to eq('')
     end
@@ -74,10 +70,7 @@ RSpec.describe Pronto::Biome::Config do
 
   describe 'loading from .pronto_biome.yml' do
     let(:runner_config) do
-      {
-        'biome_executable' => './node_modules/.bin/biome',
-        'files_to_lint' => '\\.vue$'
-      }
+      { 'biome_executable' => './node_modules/.bin/biome' }
     end
 
     before do
@@ -87,48 +80,6 @@ RSpec.describe Pronto::Biome::Config do
 
     it 'reads biome_executable from runner config' do
       expect(config.biome_executable).to eq('./node_modules/.bin/biome')
-    end
-
-    it 'converts string files_to_lint to Regexp' do
-      expect(config.files_to_lint).to eq(/\.vue$/)
-    end
-  end
-
-  describe 'files_to_lint with array of extensions' do
-    let(:runner_config) do
-      { 'files_to_lint' => %w[js ts vue] }
-    end
-
-    before do
-      allow(File).to receive(:exist?).with('/tmp/repo/.pronto_biome.yml').and_return(true)
-      allow(YAML).to receive(:safe_load_file).and_return(runner_config)
-    end
-
-    it 'converts array to Regexp' do
-      expect(config.files_to_lint).to eq(/\.(js|ts|vue)$/)
-    end
-
-    it 'matches files with those extensions' do
-      expect(config.lint_file?('app.js')).to be true
-      expect(config.lint_file?('app.ts')).to be true
-      expect(config.lint_file?('app.vue')).to be true
-      expect(config.lint_file?('app.css')).to be false
-    end
-  end
-
-  describe 'files_to_lint with dotted extensions in array' do
-    let(:runner_config) do
-      { 'files_to_lint' => %w[.js .ts] }
-    end
-
-    before do
-      allow(File).to receive(:exist?).with('/tmp/repo/.pronto_biome.yml').and_return(true)
-      allow(YAML).to receive(:safe_load_file).and_return(runner_config)
-    end
-
-    it 'strips leading dots from extensions' do
-      expect(config.lint_file?('app.js')).to be true
-      expect(config.lint_file?('app.ts')).to be true
     end
   end
 
@@ -157,37 +108,6 @@ RSpec.describe Pronto::Biome::Config do
 
     it 'pronto config is used when runner config does not specify option' do
       expect(config.cmd_line_opts).to eq('--from-pronto')
-    end
-  end
-
-  describe '#lint_file?' do
-    context 'without files_to_lint configured' do
-      it 'returns true for any file' do
-        expect(config.lint_file?('/path/to/file.js')).to be true
-        expect(config.lint_file?('/path/to/file.rb')).to be true
-        expect(config.lint_file?('/path/to/file.py')).to be true
-      end
-    end
-
-    context 'with files_to_lint configured' do
-      let(:runner_config) do
-        { 'files_to_lint' => %w[js ts] }
-      end
-
-      before do
-        allow(File).to receive(:exist?).with('/tmp/repo/.pronto_biome.yml').and_return(true)
-        allow(YAML).to receive(:safe_load_file).and_return(runner_config)
-      end
-
-      it 'returns true for matching files' do
-        expect(config.lint_file?('/path/to/file.js')).to be true
-        expect(config.lint_file?('/path/to/file.ts')).to be true
-      end
-
-      it 'returns false for non-matching files' do
-        expect(config.lint_file?('/path/to/file.rb')).to be false
-        expect(config.lint_file?('/path/to/file.css')).to be false
-      end
     end
   end
 end

@@ -16,9 +16,7 @@ module Pronto
     def run
       return [] if @patches.nil? || @patches.none?
 
-      patches_to_lint = @patches.select do |patch|
-        patch.additions.positive? && biome_config.lint_file?(patch.new_file_full_path)
-      end
+      patches_to_lint = @patches.select { |patch| patch.additions.positive? }
 
       return [] if patches_to_lint.empty?
 
