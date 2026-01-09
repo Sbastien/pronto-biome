@@ -68,16 +68,16 @@ RSpec.describe Pronto::Biome::Config do
   end
 
   describe 'loading from .pronto_biome.yml' do
-    let(:runner_yaml) do
-      <<~YAML
-        biome_executable: ./node_modules/.bin/biome
-        files_to_lint: '\\.vue$'
-      YAML
+    let(:runner_config) do
+      {
+        'biome_executable' => './node_modules/.bin/biome',
+        'files_to_lint' => '\\.vue$'
+      }
     end
 
     before do
       allow(File).to receive(:exist?).with('/tmp/repo/.pronto_biome.yml').and_return(true)
-      allow(File).to receive(:read).with('/tmp/repo/.pronto_biome.yml').and_return(runner_yaml)
+      allow(YAML).to receive(:safe_load_file).and_return(runner_config)
     end
 
     it 'reads biome_executable from runner config' do
@@ -90,18 +90,13 @@ RSpec.describe Pronto::Biome::Config do
   end
 
   describe 'files_to_lint with array of extensions' do
-    let(:runner_yaml) do
-      <<~YAML
-        files_to_lint:
-          - js
-          - ts
-          - vue
-      YAML
+    let(:runner_config) do
+      { 'files_to_lint' => %w[js ts vue] }
     end
 
     before do
       allow(File).to receive(:exist?).with('/tmp/repo/.pronto_biome.yml').and_return(true)
-      allow(File).to receive(:read).with('/tmp/repo/.pronto_biome.yml').and_return(runner_yaml)
+      allow(YAML).to receive(:safe_load_file).and_return(runner_config)
     end
 
     it 'converts array to Regexp' do
@@ -117,17 +112,13 @@ RSpec.describe Pronto::Biome::Config do
   end
 
   describe 'files_to_lint with dotted extensions in array' do
-    let(:runner_yaml) do
-      <<~YAML
-        files_to_lint:
-          - .js
-          - .ts
-      YAML
+    let(:runner_config) do
+      { 'files_to_lint' => %w[.js .ts] }
     end
 
     before do
       allow(File).to receive(:exist?).with('/tmp/repo/.pronto_biome.yml').and_return(true)
-      allow(File).to receive(:read).with('/tmp/repo/.pronto_biome.yml').and_return(runner_yaml)
+      allow(YAML).to receive(:safe_load_file).and_return(runner_config)
     end
 
     it 'strips leading dots from extensions' do
@@ -146,15 +137,13 @@ RSpec.describe Pronto::Biome::Config do
       }
     end
 
-    let(:runner_yaml) do
-      <<~YAML
-        biome_executable: from-runner
-      YAML
+    let(:runner_config) do
+      { 'biome_executable' => 'from-runner' }
     end
 
     before do
       allow(File).to receive(:exist?).with('/tmp/repo/.pronto_biome.yml').and_return(true)
-      allow(File).to receive(:read).with('/tmp/repo/.pronto_biome.yml').and_return(runner_yaml)
+      allow(YAML).to receive(:safe_load_file).and_return(runner_config)
     end
 
     it 'runner config overrides pronto config' do

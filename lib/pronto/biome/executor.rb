@@ -85,12 +85,10 @@ module Pronto
           next unless line.start_with?('{')
 
           result = JSON.parse(line)
-          if result['diagnostics']
-            return group_by_file(result['diagnostics'])
-          else
-            log_warning('Biome output missing diagnostics key')
-            return {}
-          end
+          return group_by_file(result['diagnostics']) if result['diagnostics']
+
+          log_warning('Biome output missing diagnostics key')
+          return {}
         end
         {}
       end

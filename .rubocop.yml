@@ -1,5 +1,5 @@
 AllCops:
-  TargetRubyVersion: 2.7
+  TargetRubyVersion: 3.1
   NewCops: enable
   SuggestExtensions: false
 
@@ -16,6 +16,22 @@ Metrics/MethodLength:
     - 'spec/**/*'
 
 Metrics/AbcSize:
+  Exclude:
+    - 'spec/**/*'
+    - 'lib/pronto/biome.rb'
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'lib/pronto/biome.rb'
+
+Naming/MethodParameterName:
+  AllowedNames:
+    - op
+
+Naming/MemoizedInstanceVariableName:
+  Enabled: false
+
+Metrics/ParameterLists:
   Exclude:
     - 'spec/**/*'
 

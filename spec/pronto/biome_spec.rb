@@ -355,7 +355,8 @@ RSpec.describe Pronto::Biome do
     }
   end
 
-  def offense_hash_multiline(start_line:, end_line:, category: 'lint/test', description: 'Test error', severity: 'warning', file: 'app.js')
+  def offense_hash_multiline(start_line:, end_line:, category: 'lint/test', description: 'Test error', severity: 'warning',
+                             file: 'app.js')
     {
       'category' => category,
       'severity' => severity,

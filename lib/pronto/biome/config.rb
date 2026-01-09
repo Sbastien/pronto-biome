@@ -26,7 +26,7 @@ module Pronto
       # Default extensions supported by Biome
       # https://biomejs.dev/internals/language-support/
       DEFAULT_EXTENSIONS = %w[js ts jsx tsx mjs cjs json jsonc].freeze
-      DEFAULT_FILES_TO_LINT = /\.(#{DEFAULT_EXTENSIONS.join('|')})$/.freeze
+      DEFAULT_FILES_TO_LINT = /\.(#{DEFAULT_EXTENSIONS.join('|')})$/
 
       attr_reader :biome_executable, :files_to_lint, :cmd_line_opts
 
@@ -74,7 +74,7 @@ module Pronto
         config_file = File.join(@repo_path, CONFIG_FILE)
         return {} unless File.exist?(config_file)
 
-        YAML.safe_load(File.read(config_file), permitted_classes: [Regexp]) || {}
+        YAML.safe_load_file(config_file, permitted_classes: [Regexp]) || {}
       end
 
       attr_writer :biome_executable, :cmd_line_opts
