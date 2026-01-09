@@ -4,35 +4,57 @@
 [![CI](https://github.com/Sbastien/pronto-biome/actions/workflows/ci.yml/badge.svg)](https://github.com/Sbastien/pronto-biome/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[Pronto](https://github.com/prontolabs/pronto) runner for [Biome](https://biomejs.dev/).
+> [Pronto](https://github.com/prontolabs/pronto) runner for [Biome](https://biomejs.dev/) — lint only the lines you changed.
+
+---
 
 ## Why pronto-biome?
 
-Unlike `biome check --changed` which reports all errors in changed files, pronto-biome only reports errors on the **actual lines you modified**. Perfect for legacy codebases and gradual Biome adoption.
+Traditional linters report **all errors** in modified files. This creates noise in legacy codebases and slows down code reviews.
+
+**pronto-biome** only reports errors on the **exact lines you modified**, making it perfect for:
+
+- 🎯 **Gradual adoption** — Introduce Biome without fixing thousands of pre-existing issues
+- 🔍 **Focused reviews** — See only what matters in your PR
+- 🚀 **CI integration** — Post inline comments directly on GitHub PRs
+
+---
 
 ## Installation
 
+Add to your Gemfile:
+
 ```ruby
-# Gemfile
 gem 'pronto-biome'
 ```
 
+Then install dependencies:
+
 ```bash
 bundle install
-npm install -D @biomejs/biome
+npm install -D @biomejs/biome  # or: pnpm add -D @biomejs/biome
 ```
+
+---
 
 ## Usage
 
 ```bash
-pronto run -c origin/main            # Changes since origin/main
-pronto run --staged                  # Staged changes only
-pronto run -c origin/main -f github_pr  # GitHub PR comments
+# Lint changes since origin/main
+pronto run -c origin/main --runner biome
+
+# Lint staged changes only
+pronto run --staged --runner biome
+
+# Post comments on GitHub PR
+pronto run -c origin/main -f github_pr --runner biome
 ```
+
+---
 
 ## Configuration
 
-Configure in `.pronto.yml` (recommended):
+### Option 1: `.pronto.yml` (recommended)
 
 ```yaml
 biome:
@@ -41,32 +63,46 @@ biome:
   cmd_line_opts: '--config-path=custom-biome.json'
 ```
 
-Or in `.pronto_biome.yml` (takes priority):
+### Option 2: `.pronto_biome.yml` (takes priority)
 
 ```yaml
 biome_executable: ./node_modules/.bin/biome
 files_to_lint: '\.(js|ts|jsx|tsx)$'
 ```
 
-**Options:**
+### Options
 
-- `biome_executable` - Command to run Biome (default: `biome`)
-- `files_to_lint` - Regex for files to lint (default: JS/TS/JSON extensions)
-- `cmd_line_opts` - Additional Biome CLI options
+| Option | Description | Default |
+|--------|-------------|---------|
+| `biome_executable` | Command to run Biome | `biome` |
+| `files_to_lint` | Regex pattern for files to lint | JS/TS/JSON extensions |
+| `cmd_line_opts` | Additional Biome CLI options | *(none)* |
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `BIOME_EXECUTABLE` | Override the Biome executable (useful for CI/CD) |
+
+---
 
 ## Supported Files
 
-`.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.cjs`, `.json`, `.jsonc`
+By default, pronto-biome lints files with these extensions:
 
-## Environment Variables
+`.js` · `.ts` · `.jsx` · `.tsx` · `.mjs` · `.cjs` · `.json` · `.jsonc`
 
-- `BIOME_EXECUTABLE` - Override biome executable (useful for CI/CD)
+---
 
 ## Requirements
 
-- Ruby >= 3.1
-- Pronto ~> 0.11.0
-- Biome
+| Dependency | Version |
+|------------|---------|
+| Ruby | >= 3.1 |
+| Pronto | ~> 0.11.0 |
+| Biome | Any version |
+
+---
 
 ## Contributing
 
