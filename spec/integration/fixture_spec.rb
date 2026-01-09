@@ -125,14 +125,6 @@ RSpec.describe 'Fixture-based integration', :integration do
         json_messages = messages.select { |m| m.path.end_with?('.json') }
         expect(json_messages).not_to be_empty
       end
-
-      it 'does not process unsupported file types' do
-        # Only supported extensions should have messages
-        supported_extensions = Pronto::Biome::Config.default_extensions.map { |ext| ".#{ext}" }
-        messages.each do |msg|
-          expect(supported_extensions.any? { |ext| msg.path.end_with?(ext) }).to be true
-        end
-      end
     end
 
     describe 'message format' do

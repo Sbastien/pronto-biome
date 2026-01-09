@@ -20,8 +20,8 @@ RSpec.describe Pronto::Biome::Config do
       expect(config.biome_executable).to eq('biome')
     end
 
-    it 'has default files_to_lint' do
-      expect(config.files_to_lint).to eq(/\.(js|ts|jsx|tsx|mjs|cjs|json|jsonc|css|graphql|gql)$/)
+    it 'has no default files_to_lint filter' do
+      expect(config.files_to_lint).to be_nil
     end
 
     it 'has default cmd_line_opts' do
@@ -50,12 +50,6 @@ RSpec.describe Pronto::Biome::Config do
 
     it 'reads biome_executable from BIOME_EXECUTABLE env var' do
       expect(config.biome_executable).to eq('custom-biome')
-    end
-  end
-
-  describe '.default_extensions' do
-    it 'returns the list of supported extensions' do
-      expect(described_class.default_extensions).to eq(%w[js ts jsx tsx mjs cjs json jsonc css graphql gql])
     end
   end
 
@@ -167,18 +161,33 @@ RSpec.describe Pronto::Biome::Config do
   end
 
   describe '#lint_file?' do
-    it 'returns true for matching files' do
-      expect(config.lint_file?('/path/to/file.js')).to be true
-      expect(config.lint_file?('/path/to/file.ts')).to be true
-      expect(config.lint_file?('/path/to/file.json')).to be true
-      expect(config.lint_file?('/path/to/file.css')).to be true
-      expect(config.lint_file?('/path/to/file.graphql')).to be true
-      expect(config.lint_file?('/path/to/file.gql')).to be true
+    context 'without files_to_lint configured' do
+      it 'returns true for any file' do
+        expect(config.lint_file?('/path/to/file.js')).to be true
+        expect(config.lint_file?('/path/to/file.rb')).to be true
+        expect(config.lint_file?('/path/to/file.py')).to be true
+      end
     end
 
-    it 'returns false for non-matching files' do
-      expect(config.lint_file?('/path/to/file.rb')).to be false
-      expect(config.lint_file?('/path/to/file.py')).to be false
+    context 'with files_to_lint configured' do
+      let(:runner_config) do
+        { 'files_to_lint' => %w[js ts] }
+      end
+
+      before do
+        allow(File).to receive(:exist?).with('/tmp/repo/.pronto_biome.yml').and_return(true)
+        allow(YAML).to receive(:safe_load_file).and_return(runner_config)
+      end
+
+      it 'returns true for matching files' do
+        expect(config.lint_file?('/path/to/file.js')).to be true
+        expect(config.lint_file?('/path/to/file.ts')).to be true
+      end
+
+      it 'returns false for non-matching files' do
+        expect(config.lint_file?('/path/to/file.rb')).to be false
+        expect(config.lint_file?('/path/to/file.css')).to be false
+      end
     end
   end
 end

@@ -21,12 +21,6 @@ module Pronto
     # - cmd_line_opts: Additional CLI options for Biome
     class Config
       CONFIG_FILE = '.pronto_biome.yml'
-      CONFIG_KEYS = %w[biome_executable files_to_lint cmd_line_opts].freeze
-
-      # Default extensions supported by Biome (stable support only)
-      # https://biomejs.dev/internals/language-support/
-      DEFAULT_EXTENSIONS = %w[js ts jsx tsx mjs cjs json jsonc css graphql gql].freeze
-      DEFAULT_FILES_TO_LINT = /\.(#{DEFAULT_EXTENSIONS.join('|')})$/
 
       attr_reader :biome_executable, :files_to_lint, :cmd_line_opts
 
@@ -34,17 +28,18 @@ module Pronto
         options = load_options(repo_path)
 
         @biome_executable = resolve_executable(options).freeze
-        @files_to_lint = resolve_files_to_lint(options).freeze
+        @files_to_lint = resolve_files_to_lint(options)
         @cmd_line_opts = (options['cmd_line_opts'] || '').freeze
 
         freeze
       end
 
-      # Returns true if the file path matches the lint pattern.
-      def lint_file?(path) = files_to_lint.match?(path.to_s)
+      # Returns true if the file path matches the lint pattern (or no filter is set).
+      def lint_file?(path)
+        return true unless @files_to_lint
 
-      # Returns the list of supported extensions (for documentation/debugging).
-      def self.default_extensions = DEFAULT_EXTENSIONS
+        @files_to_lint.match?(path.to_s)
+      end
 
       private
 
@@ -69,11 +64,12 @@ module Pronto
         ENV.fetch('BIOME_EXECUTABLE', nil) || options['biome_executable'] || 'biome'
       end
 
-      # Converts files_to_lint to a Regexp.
+      # Converts files_to_lint to a Regexp if provided.
       # Accepts: Regexp, string pattern (e.g., '\\.vue$'), or array of extensions (['js', 'ts'])
+      # Returns nil if not configured (all files sent to Biome).
       def resolve_files_to_lint(options)
         value = options['files_to_lint']
-        return DEFAULT_FILES_TO_LINT unless value
+        return nil unless value
 
         case value
         when Regexp then value

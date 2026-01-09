@@ -75,7 +75,7 @@ files_to_lint: '\.(js|ts|jsx|tsx)$'
 | Option | Description | Default |
 |--------|-------------|---------|
 | `biome_executable` | Command to run Biome | `biome` |
-| `files_to_lint` | Regex pattern for files to lint | JS/TS/JSON extensions |
+| `files_to_lint` | Regex or array to filter files | *(all files)* |
 | `cmd_line_opts` | Additional Biome CLI options | *(none)* |
 
 ### Environment Variables
@@ -83,14 +83,6 @@ files_to_lint: '\.(js|ts|jsx|tsx)$'
 | Variable | Description |
 |----------|-------------|
 | `BIOME_EXECUTABLE` | Override the Biome executable (useful for CI/CD) |
-
----
-
-## Supported Files
-
-By default, pronto-biome lints files with these extensions:
-
-`.js` · `.ts` · `.jsx` · `.tsx` · `.mjs` · `.cjs` · `.json` · `.jsonc` · `.css` · `.graphql` · `.gql`
 
 ---
 

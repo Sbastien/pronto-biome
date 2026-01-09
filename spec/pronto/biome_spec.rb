@@ -46,38 +46,6 @@ RSpec.describe Pronto::Biome do
       end
     end
 
-    context 'with unsupported file' do
-      let(:patch) do
-        instance_double(
-          Pronto::Git::Patch,
-          additions: 1,
-          new_file_full_path: Pathname.new('/tmp/repo/script.rb'),
-          repo: repo
-        )
-      end
-      let(:patches) { [patch] }
-
-      before { stub_runner_config(false) }
-
-      it 'skips unsupported files' do
-        expect(runner.run).to eq([])
-      end
-    end
-
-    %w[js ts jsx tsx mjs cjs json jsonc css graphql gql].each do |ext|
-      context "with .#{ext} file" do
-        let(:patch) { create_patch("app.#{ext}") }
-        let(:patches) { [patch] }
-        let(:biome_output) { biome_json_with_offense(line: 5) }
-
-        before { stub_biome(biome_output) }
-
-        it "processes .#{ext} files" do
-          expect(runner.run.size).to eq(1)
-        end
-      end
-    end
-
     context 'when offense is on an added line' do
       let(:patch) { create_patch('app.js', added_lines: [5, 6, 7]) }
       let(:patches) { [patch] }
