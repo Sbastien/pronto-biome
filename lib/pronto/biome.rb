@@ -5,6 +5,7 @@ require_relative 'biome/version'
 require_relative 'biome/config'
 require_relative 'biome/executor'
 require_relative 'biome/offense'
+require_relative 'biome/added_line_resolver'
 
 module Pronto
   # Pronto runner for Biome - a fast linter/formatter for JavaScript, TypeScript, and JSON.
@@ -47,20 +48,17 @@ module Pronto
       # Use relative path to match Biome's output format
       relative_path = patch.delta.new_file[:path]
       diagnostics = executor.diagnostics_for(relative_path)
+      resolver = AddedLineResolver.new(patch)
 
       diagnostics.flat_map do |diagnostic|
         offense = Offense.new(diagnostic)
         next unless offense.valid?
 
-        added_line = find_added_line(patch, offense.line_range)
+        added_line = resolver.find_in_range(offense.line_range)
         next unless added_line
 
         new_message(offense, added_line)
       end
-    end
-
-    def find_added_line(patch, line_range)
-      patch.added_lines.reverse_each.find { |line| line_range.cover?(line.new_lineno) }
     end
 
     def new_message(offense, line)
