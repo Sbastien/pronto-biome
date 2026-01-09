@@ -21,7 +21,7 @@ RSpec.describe Pronto::Biome::Config do
     end
 
     it 'has default files_to_lint' do
-      expect(config.files_to_lint).to eq(/\.(js|ts|jsx|tsx|mjs|cjs|json|jsonc)$/)
+      expect(config.files_to_lint).to eq(/\.(js|ts|jsx|tsx|mjs|cjs|json|jsonc|css|graphql|gql)$/)
     end
 
     it 'has default cmd_line_opts' do
@@ -55,7 +55,7 @@ RSpec.describe Pronto::Biome::Config do
 
   describe '.default_extensions' do
     it 'returns the list of supported extensions' do
-      expect(described_class.default_extensions).to eq(%w[js ts jsx tsx mjs cjs json jsonc])
+      expect(described_class.default_extensions).to eq(%w[js ts jsx tsx mjs cjs json jsonc css graphql gql])
     end
   end
 
@@ -171,11 +171,14 @@ RSpec.describe Pronto::Biome::Config do
       expect(config.lint_file?('/path/to/file.js')).to be true
       expect(config.lint_file?('/path/to/file.ts')).to be true
       expect(config.lint_file?('/path/to/file.json')).to be true
+      expect(config.lint_file?('/path/to/file.css')).to be true
+      expect(config.lint_file?('/path/to/file.graphql')).to be true
+      expect(config.lint_file?('/path/to/file.gql')).to be true
     end
 
     it 'returns false for non-matching files' do
-      expect(config.lint_file?('/path/to/file.css')).to be false
       expect(config.lint_file?('/path/to/file.rb')).to be false
+      expect(config.lint_file?('/path/to/file.py')).to be false
     end
   end
 end

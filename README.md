@@ -90,7 +90,7 @@ files_to_lint: '\.(js|ts|jsx|tsx)$'
 
 By default, pronto-biome lints files with these extensions:
 
-`.js` · `.ts` · `.jsx` · `.tsx` · `.mjs` · `.cjs` · `.json` · `.jsonc`
+`.js` · `.ts` · `.jsx` · `.tsx` · `.mjs` · `.cjs` · `.json` · `.jsonc` · `.css` · `.graphql` · `.gql`
 
 ---
 

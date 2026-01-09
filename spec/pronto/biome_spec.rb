@@ -46,12 +46,12 @@ RSpec.describe Pronto::Biome do
       end
     end
 
-    context 'with non-JS file' do
+    context 'with unsupported file' do
       let(:patch) do
         instance_double(
           Pronto::Git::Patch,
           additions: 1,
-          new_file_full_path: Pathname.new('/tmp/repo/style.css'),
+          new_file_full_path: Pathname.new('/tmp/repo/script.rb'),
           repo: repo
         )
       end
@@ -59,12 +59,12 @@ RSpec.describe Pronto::Biome do
 
       before { stub_runner_config(false) }
 
-      it 'skips non-JS files' do
+      it 'skips unsupported files' do
         expect(runner.run).to eq([])
       end
     end
 
-    %w[js ts jsx tsx mjs cjs json jsonc].each do |ext|
+    %w[js ts jsx tsx mjs cjs json jsonc css graphql gql].each do |ext|
       context "with .#{ext} file" do
         let(:patch) { create_patch("app.#{ext}") }
         let(:patches) { [patch] }

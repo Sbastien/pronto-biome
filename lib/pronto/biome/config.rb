@@ -23,9 +23,9 @@ module Pronto
       CONFIG_FILE = '.pronto_biome.yml'
       CONFIG_KEYS = %w[biome_executable files_to_lint cmd_line_opts].freeze
 
-      # Default extensions supported by Biome
+      # Default extensions supported by Biome (stable support only)
       # https://biomejs.dev/internals/language-support/
-      DEFAULT_EXTENSIONS = %w[js ts jsx tsx mjs cjs json jsonc].freeze
+      DEFAULT_EXTENSIONS = %w[js ts jsx tsx mjs cjs json jsonc css graphql gql].freeze
       DEFAULT_FILES_TO_LINT = /\.(#{DEFAULT_EXTENSIONS.join('|')})$/
 
       attr_reader :biome_executable, :files_to_lint, :cmd_line_opts
