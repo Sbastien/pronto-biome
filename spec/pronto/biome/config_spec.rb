@@ -29,6 +29,19 @@ RSpec.describe Pronto::Biome::Config do
     end
   end
 
+  describe 'environment variables' do
+    around do |example|
+      original = ENV.fetch('BIOME_EXECUTABLE', nil)
+      ENV['BIOME_EXECUTABLE'] = 'custom-biome'
+      example.run
+      ENV['BIOME_EXECUTABLE'] = original
+    end
+
+    it 'reads biome_executable from BIOME_EXECUTABLE env var' do
+      expect(config.biome_executable).to eq('custom-biome')
+    end
+  end
+
   describe '.default_extensions' do
     it 'returns the list of supported extensions' do
       expect(described_class.default_extensions).to eq(%w[js ts jsx tsx mjs cjs json jsonc])

@@ -7,9 +7,13 @@ module Pronto
     # Configuration management for pronto-biome.
     #
     # Configuration sources (in priority order):
-    # 1. .pronto_biome.yml - Runner-specific config (highest priority)
-    # 2. .pronto.yml under 'biome' key - Global Pronto config
-    # 3. Built-in defaults
+    # 1. Environment variables (highest priority)
+    # 2. .pronto_biome.yml - Runner-specific config
+    # 3. .pronto.yml under 'biome' key - Global Pronto config
+    # 4. Built-in defaults
+    #
+    # Environment variables:
+    # - BIOME_EXECUTABLE: Command to run Biome
     #
     # Available options:
     # - biome_executable: Command to run Biome (default: 'biome')
@@ -28,7 +32,7 @@ module Pronto
 
       def initialize(repo_path)
         @repo_path = repo_path
-        @biome_executable = 'biome'
+        @biome_executable = ENV.fetch('BIOME_EXECUTABLE', 'biome')
         @files_to_lint = DEFAULT_FILES_TO_LINT
         @cmd_line_opts = ''
 
