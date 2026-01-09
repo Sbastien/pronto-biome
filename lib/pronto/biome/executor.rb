@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'open3'
 require 'shellwords'
 
 module Pronto
@@ -56,23 +57,26 @@ module Pronto
       end
 
       def run_and_parse(file_paths)
-        output = `#{build_command(file_paths)}`
-        return {} if output.empty?
+        stdout, stderr, status = Open3.capture3(*build_command(file_paths))
 
-        parse_output(output)
+        log_warning("Biome stderr: #{stderr}") if stderr && !stderr.empty?
+
+        if stdout.empty?
+          log_warning("Biome exited with code #{status.exitstatus}") unless status.success?
+          return {}
+        end
+
+        parse_output(stdout)
       end
 
       def build_command(file_paths)
-        escaped_paths = file_paths.map { |p| Shellwords.escape(p) }.join(' ')
-
         [
-          @config.biome_executable,
+          *Shellwords.split(@config.biome_executable),
           'check',
-          @config.cmd_line_opts,
+          *Shellwords.split(@config.cmd_line_opts),
           '--reporter=json',
-          escaped_paths,
-          '2>/dev/null'
-        ].reject(&:empty?).join(' ')
+          *file_paths
+        ].reject(&:empty?)
       end
 
       # Parses Biome JSON output and groups diagnostics by file path.

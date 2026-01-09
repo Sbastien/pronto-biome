@@ -335,7 +335,7 @@ RSpec.describe Pronto::Biome do
   def stub_biome(output)
     stub_runner_config(false)
     allow(Dir).to receive(:chdir).and_yield
-    allow_any_instance_of(Pronto::Biome::Executor).to receive(:`).and_return(output)
+    allow(Open3).to receive(:capture3).and_return([output, '', double(success?: true)])
   end
 
   def biome_json_with_offense(line:, category: 'lint/test', description: 'Test error', severity: 'warning', file: nil)

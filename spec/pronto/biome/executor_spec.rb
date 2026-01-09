@@ -25,7 +25,7 @@ RSpec.describe Pronto::Biome::Executor do
   describe '#run' do
     before do
       allow(Dir).to receive(:chdir).and_yield
-      allow(executor).to receive(:`).and_return(output)
+      allow(Open3).to receive(:capture3).and_return([output, '', double(success?: true)])
     end
 
     context 'with diagnostics from multiple files' do
@@ -82,7 +82,7 @@ RSpec.describe Pronto::Biome::Executor do
       let(:output) { '' }
 
       it 'returns empty hash without executing' do
-        expect(executor).not_to receive(:`)
+        expect(Open3).not_to receive(:capture3)
         expect(executor.run([])).to eq({})
       end
     end
@@ -120,6 +120,45 @@ RSpec.describe Pronto::Biome::Executor do
         expect(executor.run(['/tmp/repo/app.js'])).to eq({})
       end
     end
+
+    context 'with stderr output' do
+      let(:output) { { 'diagnostics' => [] }.to_json }
+
+      before do
+        allow(Open3).to receive(:capture3).and_return([output, 'some warning', double(success?: true)])
+      end
+
+      it 'logs stderr as warning' do
+        expect(executor).to receive(:warn).with('[pronto-biome] Biome stderr: some warning')
+        executor.run(['/tmp/repo/app.js'])
+      end
+    end
+
+    context 'with empty output and failed exit status' do
+      let(:output) { '' }
+
+      before do
+        allow(Open3).to receive(:capture3).and_return(['', '', double(success?: false, exitstatus: 1)])
+      end
+
+      it 'logs exit code warning' do
+        expect(executor).to receive(:warn).with('[pronto-biome] Biome exited with code 1')
+        executor.run(['/tmp/repo/app.js'])
+      end
+    end
+
+    context 'with empty output and successful exit status' do
+      let(:output) { '' }
+
+      before do
+        allow(Open3).to receive(:capture3).and_return(['', '', double(success?: true, exitstatus: 0)])
+      end
+
+      it 'does not log exit code warning' do
+        expect(executor).not_to receive(:warn)
+        executor.run(['/tmp/repo/app.js'])
+      end
+    end
   end
 
   describe 'command building' do
@@ -127,20 +166,22 @@ RSpec.describe Pronto::Biome::Executor do
 
     before do
       allow(Dir).to receive(:chdir).and_yield
+      allow(Open3).to receive(:capture3).and_return([valid_output, '', double(success?: true)])
     end
 
     context 'with single file' do
       it 'builds correct command' do
-        expect(executor).to receive(:`).with('biome check --reporter=json /tmp/repo/app.js 2>/dev/null').and_return(valid_output)
         executor.run(['/tmp/repo/app.js'])
+        expect(Open3).to have_received(:capture3).with('biome', 'check', '--reporter=json', '/tmp/repo/app.js')
       end
     end
 
     context 'with multiple files' do
       it 'includes all files in command' do
-        expected = 'biome check --reporter=json /tmp/repo/app.js /tmp/repo/utils.js 2>/dev/null'
-        expect(executor).to receive(:`).with(expected).and_return(valid_output)
         executor.run(['/tmp/repo/app.js', '/tmp/repo/utils.js'])
+        expect(Open3).to have_received(:capture3).with(
+          'biome', 'check', '--reporter=json', '/tmp/repo/app.js', '/tmp/repo/utils.js'
+        )
       end
     end
 
@@ -148,9 +189,10 @@ RSpec.describe Pronto::Biome::Executor do
       let(:biome_executable) { 'yarn --silent biome' }
 
       it 'builds correct command' do
-        expected = 'yarn --silent biome check --reporter=json /tmp/repo/app.js 2>/dev/null'
-        expect(executor).to receive(:`).with(expected).and_return(valid_output)
         executor.run(['/tmp/repo/app.js'])
+        expect(Open3).to have_received(:capture3).with(
+          'yarn', '--silent', 'biome', 'check', '--reporter=json', '/tmp/repo/app.js'
+        )
       end
     end
 
@@ -158,17 +200,19 @@ RSpec.describe Pronto::Biome::Executor do
       let(:cmd_line_opts) { '--config-path=custom.json' }
 
       it 'includes options in command' do
-        expected = 'biome check --config-path=custom.json --reporter=json /tmp/repo/app.js 2>/dev/null'
-        expect(executor).to receive(:`).with(expected).and_return(valid_output)
         executor.run(['/tmp/repo/app.js'])
+        expect(Open3).to have_received(:capture3).with(
+          'biome', 'check', '--config-path=custom.json', '--reporter=json', '/tmp/repo/app.js'
+        )
       end
     end
 
     context 'with file paths containing spaces' do
-      it 'escapes all file paths' do
-        expected = 'biome check --reporter=json /tmp/repo/my\\ file.js /tmp/repo/other\\ file.js 2>/dev/null'
-        expect(executor).to receive(:`).with(expected).and_return(valid_output)
+      it 'passes paths as separate arguments (no escaping needed)' do
         executor.run(['/tmp/repo/my file.js', '/tmp/repo/other file.js'])
+        expect(Open3).to have_received(:capture3).with(
+          'biome', 'check', '--reporter=json', '/tmp/repo/my file.js', '/tmp/repo/other file.js'
+        )
       end
     end
   end
@@ -180,7 +224,7 @@ RSpec.describe Pronto::Biome::Executor do
 
     before do
       allow(Dir).to receive(:chdir).and_yield
-      allow(executor).to receive(:`).and_return(output)
+      allow(Open3).to receive(:capture3).and_return([output, '', double(success?: true)])
     end
 
     it 'caches results after first run' do
@@ -188,7 +232,7 @@ RSpec.describe Pronto::Biome::Executor do
       executor.run(['/tmp/repo/app.js', '/tmp/repo/other.js'])
 
       # Should only call the command once (first run)
-      expect(executor).to have_received(:`).once
+      expect(Open3).to have_received(:capture3).once
     end
 
     it 'returns diagnostics_for after run' do
@@ -206,7 +250,7 @@ RSpec.describe Pronto::Biome::Executor do
         executor.clear_cache
         executor.run(['/tmp/repo/app.js'])
 
-        expect(executor).to have_received(:`).twice
+        expect(Open3).to have_received(:capture3).twice
       end
     end
   end
