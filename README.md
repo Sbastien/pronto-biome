@@ -58,9 +58,13 @@ files_to_lint: '\.(js|ts|jsx|tsx)$'
 
 `.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.cjs`, `.json`, `.jsonc`
 
+## Environment Variables
+
+- `BIOME_EXECUTABLE` - Override biome executable (useful for CI/CD)
+
 ## Requirements
 
-- Ruby >= 2.7
+- Ruby >= 3.1
 - Pronto ~> 0.11.0
 - Biome
 
