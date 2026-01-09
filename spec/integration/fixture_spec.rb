@@ -85,6 +85,24 @@ RSpec.describe 'Fixture-based integration', :integration do
       end
     end
 
+    describe 'JSON errors' do
+      it 'detects syntax errors in JSON files' do
+        json_msg = messages.find { |m| m.path.end_with?('.json') }
+        expect(json_msg).not_to be_nil
+      end
+
+      it 'reports parse errors with correct level' do
+        parse_msg = messages.find { |m| m.path.end_with?('.json') && m.msg.include?('parse') }
+        expect(parse_msg).not_to be_nil
+        expect(parse_msg.level).to eq(:error)
+      end
+
+      it 'detects duplicate object keys' do
+        duplicate_msg = messages.find { |m| m.msg.include?('duplicateKey') || m.msg.include?('noDuplicateObjectKeys') }
+        expect(duplicate_msg).not_to be_nil
+      end
+    end
+
     describe 'file filtering' do
       it 'only reports on added/modified lines' do
         # All messages should be on lines that were added in the feature branch
@@ -101,6 +119,19 @@ RSpec.describe 'Fixture-based integration', :integration do
       it 'processes TSX files' do
         tsx_messages = messages.select { |m| m.path.end_with?('.tsx') }
         expect(tsx_messages).not_to be_empty
+      end
+
+      it 'processes JSON files' do
+        json_messages = messages.select { |m| m.path.end_with?('.json') }
+        expect(json_messages).not_to be_empty
+      end
+
+      it 'does not process unsupported file types' do
+        # Only supported extensions should have messages
+        supported_extensions = Pronto::Biome::Config.default_extensions.map { |ext| ".#{ext}" }
+        messages.each do |msg|
+          expect(supported_extensions.any? { |ext| msg.path.end_with?(ext) }).to be true
+        end
       end
     end
 

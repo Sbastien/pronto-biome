@@ -1,0 +1,23 @@
+{
+  "analytics": {
+    "enabled": true,
+    "endpoint": "/api/analytics",
+    "batchSize": 100,
+    "retryAttempts": 3,
+  },
+  "features": {
+    "darkMode": false,
+    "notifications": true,
+    "betaFeatures": {
+      "newDashboard": false,
+      "aiAssistant": true,
+    }
+  },
+  "ui": {
+    "theme": "light",
+    "language": "en",
+    "dateFormat": "YYYY-MM-DD",
+  },
+  "duplicateKey": "first",
+  "duplicateKey": "second"
+}

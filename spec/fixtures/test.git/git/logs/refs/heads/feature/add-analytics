@@ -1,2 +1,8 @@
 0000000000000000000000000000000000000000 b30bae662a912fddc99518c35e53dfa3d9e23630 Test <test@test.com> 1767887062 +0100	branch: Created from HEAD
 b30bae662a912fddc99518c35e53dfa3d9e23630 a52195e8c0b89ce15828e1e67bc6804c849e1daa Test <test@test.com> 1767887104 +0100	commit: Add analytics tracking feature
+a52195e8c0b89ce15828e1e67bc6804c849e1daa 48ee069abf1657475f18bd1cd4fc2ce83f2dd33d Test <test@test.com> 1767900881 +0100	commit: Add settings config
+48ee069abf1657475f18bd1cd4fc2ce83f2dd33d 0e4d95a13f9fe100a1bb9788efe8ce4124d75f33 Test <test@test.com> 1767946619 +0100	commit (amend): Add settings config
+0e4d95a13f9fe100a1bb9788efe8ce4124d75f33 7c2db5993fafa779b16806e8b6145a46bb1fac03 Test <test@test.com> 1767946646 +0100	commit (amend): Add settings config
+7c2db5993fafa779b16806e8b6145a46bb1fac03 abf1787bcefae5d93f3657d3b495c78fdf22c345 Test <test@test.com> 1767946703 +0100	commit (amend): Add settings config
+abf1787bcefae5d93f3657d3b495c78fdf22c345 b30bae662a912fddc99518c35e53dfa3d9e23630 Test <test@test.com> 1767946996 +0100	reset: moving to main
+b30bae662a912fddc99518c35e53dfa3d9e23630 948e21c89e7990b89f802afcdaf3c127b20fafb9 Test <test@test.com> 1767946996 +0100	commit: Add analytics tracking feature with errors
