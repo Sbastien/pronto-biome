@@ -31,12 +31,13 @@ module Pronto
       attr_reader :biome_executable, :files_to_lint, :cmd_line_opts
 
       def initialize(repo_path)
-        @repo_path = repo_path
-        @biome_executable = ENV.fetch('BIOME_EXECUTABLE', 'biome')
-        @files_to_lint = DEFAULT_FILES_TO_LINT
-        @cmd_line_opts = ''
+        options = load_options(repo_path)
 
-        load_config
+        @biome_executable = resolve_executable(options).freeze
+        @files_to_lint = resolve_files_to_lint(options).freeze
+        @cmd_line_opts = (options['cmd_line_opts'] || '').freeze
+
+        freeze
       end
 
       # Returns true if the file path matches the lint pattern.
@@ -47,53 +48,43 @@ module Pronto
 
       private
 
-      def load_config
-        merged_options.each do |key, value|
-          next unless CONFIG_KEYS.include?(key.to_s)
-
-          send(:"#{key}=", value)
-        end
-      end
-
-      # Merge configs with priority: runner-specific file > global .pronto.yml
-      def merged_options
-        pronto_config.merge(runner_config)
+      def load_options(repo_path)
+        pronto_config.merge(load_runner_config(repo_path))
       end
 
       # Global Pronto config from .pronto.yml
       def pronto_config
-        @pronto_config ||= Pronto::ConfigFile.new.to_h['biome'] || {}
+        Pronto::ConfigFile.new.to_h['biome'] || {}
       end
 
       # Runner-specific config from .pronto_biome.yml
-      def runner_config
-        @runner_config ||= load_runner_config
-      end
-
-      def load_runner_config
-        config_file = File.join(@repo_path, CONFIG_FILE)
+      def load_runner_config(repo_path)
+        config_file = File.join(repo_path, CONFIG_FILE)
         return {} unless File.exist?(config_file)
 
         YAML.safe_load_file(config_file, permitted_classes: [Regexp]) || {}
       end
 
-      attr_writer :biome_executable, :cmd_line_opts
+      def resolve_executable(options)
+        ENV.fetch('BIOME_EXECUTABLE', nil) || options['biome_executable'] || 'biome'
+      end
 
       # Converts files_to_lint to a Regexp.
-      # Accepts:
-      # - A Regexp directly
-      # - A string regex pattern (e.g., '\\.vue$')
-      # - An array of extensions (e.g., ['js', 'ts', 'vue'])
-      def files_to_lint=(value)
-        @files_to_lint = case value
-                         when Regexp
-                           value
-                         when Array
-                           extensions = value.map { |ext| ext.to_s.delete_prefix('.') }
-                           Regexp.new("\\.(#{extensions.join('|')})$")
-                         else
-                           Regexp.new(value.to_s)
-                         end
+      # Accepts: Regexp, string pattern (e.g., '\\.vue$'), or array of extensions (['js', 'ts'])
+      def resolve_files_to_lint(options)
+        value = options['files_to_lint']
+        return DEFAULT_FILES_TO_LINT unless value
+
+        case value
+        when Regexp then value
+        when Array then array_to_regexp(value)
+        else Regexp.new(value.to_s)
+        end
+      end
+
+      def array_to_regexp(extensions)
+        normalized = extensions.map { |ext| ext.to_s.delete_prefix('.') }
+        Regexp.new("\\.(#{normalized.join('|')})$")
       end
     end
   end

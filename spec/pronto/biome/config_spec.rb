@@ -29,6 +29,17 @@ RSpec.describe Pronto::Biome::Config do
     end
   end
 
+  describe 'immutability' do
+    it 'is frozen after initialization' do
+      expect(config).to be_frozen
+    end
+
+    it 'has frozen attributes' do
+      expect(config.biome_executable).to be_frozen
+      expect(config.cmd_line_opts).to be_frozen
+    end
+  end
+
   describe 'environment variables' do
     around do |example|
       original = ENV.fetch('BIOME_EXECUTABLE', nil)
