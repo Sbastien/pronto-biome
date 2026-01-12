@@ -121,15 +121,27 @@ RSpec.describe Pronto::Biome::Executor do
       end
     end
 
-    context 'with stderr output' do
+    context 'with empty output and stderr' do
+      before do
+        allow(Open3).to receive(:capture3).and_return(['', 'some error message', double(success?: false, exitstatus: 1)])
+      end
+
+      it 'logs stderr when stdout is empty' do
+        expect(executor).to receive(:warn).with('[pronto-biome] Biome stderr: some error message')
+        expect(executor).to receive(:warn).with('[pronto-biome] Biome exited with code 1')
+        executor.run(['/tmp/repo/app.js'])
+      end
+    end
+
+    context 'with JSON output and stderr' do
       let(:output) { { 'diagnostics' => [] }.to_json }
 
       before do
-        allow(Open3).to receive(:capture3).and_return([output, 'some warning', double(success?: true)])
+        allow(Open3).to receive(:capture3).and_return([output, 'some warning noise', double(success?: true)])
       end
 
-      it 'logs stderr as warning' do
-        expect(executor).to receive(:warn).with('[pronto-biome] Biome stderr: some warning')
+      it 'ignores stderr when stdout has JSON' do
+        expect(executor).not_to receive(:warn)
         executor.run(['/tmp/repo/app.js'])
       end
     end

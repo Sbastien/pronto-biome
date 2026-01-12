@@ -59,13 +59,15 @@ module Pronto
       def run_and_parse(file_paths)
         stdout, stderr, status = Open3.capture3(*build_command(file_paths))
 
-        log_warning("Biome stderr: #{stderr}") if stderr && !stderr.empty?
-
         if stdout.empty?
+          # No JSON output - log stderr which may contain the actual error
+          log_warning("Biome stderr: #{stderr}") unless stderr.empty?
           log_warning("Biome exited with code #{status.exitstatus}") unless status.success?
           return {}
         end
 
+        # stdout has JSON - stderr only contains non-actionable noise
+        # (e.g., "--json option is unstable", progress bars)
         parse_output(stdout)
       end
 

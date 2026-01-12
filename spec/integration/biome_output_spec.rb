@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'open3'
 require 'tmpdir'
 require 'fileutils'
 
@@ -20,6 +21,19 @@ RSpec.describe 'Biome output integration', :integration do
     JSON.parse(output)
   rescue JSON::ParserError
     nil
+  end
+
+  describe 'stderr noise' do
+    it 'still outputs experimental JSON warning (remove stderr filtering when this fails)' do
+      file_path = File.join(temp_dir, 'test.js')
+      File.write(file_path, 'const x = 1;')
+
+      _stdout, stderr, _status = Open3.capture3(biome_executable, 'check', '--reporter=json', file_path)
+
+      # When this test fails, Biome has fixed the warning and we can simplify
+      # the stderr handling in lib/pronto/biome/executor.rb
+      expect(stderr).to include('--json option is unstable')
+    end
   end
 
   describe 'lint error output structure' do
