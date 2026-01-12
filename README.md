@@ -4,21 +4,7 @@
 [![CI](https://github.com/Sbastien/pronto-biome/actions/workflows/ci.yml/badge.svg)](https://github.com/Sbastien/pronto-biome/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> [Pronto](https://github.com/prontolabs/pronto) runner for [Biome](https://biomejs.dev/) — lint only the lines you changed.
-
----
-
-## Why pronto-biome?
-
-Traditional linters report **all errors** in modified files. This creates noise in legacy codebases and slows down code reviews.
-
-**pronto-biome** only reports errors on the **exact lines you modified**, making it perfect for:
-
-- 🎯 **Gradual adoption** — Introduce Biome without fixing thousands of pre-existing issues
-- 🔍 **Focused reviews** — See only what matters in your PR
-- 🚀 **CI integration** — Post inline comments directly on GitHub PRs
-
----
+[Pronto](https://github.com/prontolabs/pronto) runner for [Biome](https://biomejs.dev/). Reports lint errors only on the lines you changed — perfect for gradual adoption in legacy codebases.
 
 ## Installation
 
@@ -35,22 +21,11 @@ bundle install
 npm install -D @biomejs/biome  # or: pnpm add -D @biomejs/biome
 ```
 
----
-
 ## Usage
 
 ```bash
-# Lint changes since origin/main
 pronto run -c origin/main --runner biome
-
-# Lint staged changes only
-pronto run --staged --runner biome
-
-# Post comments on GitHub PR
-pronto run -c origin/main -f github_pr --runner biome
 ```
-
----
 
 ## Configuration
 
@@ -79,21 +54,17 @@ biome_executable: ./node_modules/.bin/biome
 
 ### Environment Variables
 
-| Variable | Description |
-|----------|-------------|
+| Variable           | Description                                      |
+|--------------------|--------------------------------------------------|
 | `BIOME_EXECUTABLE` | Override the Biome executable (useful for CI/CD) |
-
----
 
 ## Requirements
 
-| Dependency | Version |
-|------------|---------|
-| Ruby | >= 3.1 |
-| Pronto | ~> 0.11.0 |
-| Biome | Any version |
-
----
+| Dependency | Version     |
+|------------|-------------|
+| Ruby       | >= 3.1      |
+| Pronto     | ~> 0.11.0   |
+| Biome      | Any version |
 
 ## Contributing
 
