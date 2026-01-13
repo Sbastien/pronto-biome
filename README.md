@@ -1,8 +1,9 @@
 # pronto-biome
 
-[![Gem Version](https://badge.fury.io/rb/pronto-biome.svg)](https://badge.fury.io/rb/pronto-biome)
-[![CI](https://github.com/Sbastien/pronto-biome/actions/workflows/ci.yml/badge.svg)](https://github.com/Sbastien/pronto-biome/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Gem Version](https://img.shields.io/gem/v/pronto-biome)](https://rubygems.org/gems/pronto-biome)
+[![Downloads](https://img.shields.io/gem/dt/pronto-biome)](https://rubygems.org/gems/pronto-biome)
+[![CI](https://img.shields.io/github/actions/workflow/status/Sbastien/pronto-biome/ci.yml?branch=main)](https://github.com/Sbastien/pronto-biome/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/Sbastien/pronto-biome)](LICENSE)
 
 [Pronto](https://github.com/prontolabs/pronto) runner for [Biome](https://biomejs.dev/). Reports lint errors only on the lines you changed — perfect for gradual adoption in legacy codebases.
 
