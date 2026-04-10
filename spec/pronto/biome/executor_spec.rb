@@ -22,6 +22,14 @@ RSpec.describe Pronto::Biome::Executor do
     }
   end
 
+  # Biome 2.x changed the location.path format from a hash to a plain string.
+  def diagnostic_v2(file_path, category = 'lint/test')
+    {
+      'category' => category,
+      'location' => { 'path' => file_path }
+    }
+  end
+
   describe '#run' do
     before do
       allow(Dir).to receive(:chdir).and_yield
@@ -52,6 +60,41 @@ RSpec.describe Pronto::Biome::Executor do
         expect(executor.diagnostics_for('/tmp/repo/app.js').size).to eq(2)
         expect(executor.diagnostics_for('/tmp/repo/utils.js').size).to eq(1)
         expect(executor.diagnostics_for('/tmp/repo/unknown.js')).to eq([])
+      end
+    end
+
+    context 'with Biome 2.x path format (string instead of hash)' do
+      let(:output) do
+        {
+          'diagnostics' => [
+            diagnostic_v2('/tmp/repo/app.js', 'lint/error1'),
+            diagnostic_v2('/tmp/repo/app.js', 'lint/error2'),
+            diagnostic_v2('/tmp/repo/utils.js', 'lint/error3')
+          ]
+        }.to_json
+      end
+
+      it 'groups diagnostics by file path' do
+        result = executor.run(['/tmp/repo/app.js', '/tmp/repo/utils.js'])
+
+        expect(result['/tmp/repo/app.js'].size).to eq(2)
+        expect(result['/tmp/repo/utils.js'].size).to eq(1)
+      end
+    end
+
+    context 'with unexpected location.path format' do
+      let(:output) do
+        {
+          'diagnostics' => [
+            { 'category' => 'lint/test', 'location' => { 'path' => 42 } },
+            { 'category' => 'lint/test', 'location' => {} }
+          ]
+        }.to_json
+      end
+
+      it 'skips diagnostics with invalid path instead of raising' do
+        expect { executor.run(['/tmp/repo/app.js']) }.not_to raise_error
+        expect(executor.run(['/tmp/repo/app.js'])).to eq({})
       end
     end
 

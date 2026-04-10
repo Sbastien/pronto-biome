@@ -101,9 +101,20 @@ module Pronto
 
       def group_by_file(diagnostics)
         diagnostics.each_with_object(Hash.new { |h, k| h[k] = [] }) do |diagnostic, grouped|
-          path = diagnostic.dig('location', 'path', 'file')
+          path = extract_path(diagnostic.dig('location', 'path'))
           grouped[path] << diagnostic if path
         end
+      end
+
+      # Extracts the file path from Biome's location.path field.
+      #
+      # Biome 1.x format: { "file" => "/path/to/file.js" }
+      # Biome 2.x format: "/path/to/file.js"
+      def extract_path(path_value)
+        return path_value if path_value.is_a?(String)
+        return path_value['file'] if path_value.is_a?(Hash)
+
+        nil
       end
 
       def log_warning(message) = warn "[pronto-biome] #{message}"

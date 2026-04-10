@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Support Biome 2.x `location.path` format (plain string) in addition to the
+  legacy 1.x format (`{ "file" => "..." }`). Previously, running against
+  Biome 2.x raised `TypeError: String does not have #dig method`.
+
 ## [0.1.1] - 2026-01-12
 
 ### Fixed
