@@ -31,7 +31,7 @@ jobs:
         run: gem push pronto-biome-*.gem
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: pronto-biome-*.gem
           generate_release_notes: true
