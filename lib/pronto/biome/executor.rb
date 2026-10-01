@@ -2,6 +2,7 @@
 
 require 'json'
 require 'open3'
+require 'pathname'
 require 'shellwords'
 
 module Pronto
@@ -34,7 +35,7 @@ module Pronto
       def diagnostics_for(file_path)
         return [] unless @results
 
-        @results[file_path] || []
+        @results[normalize_path(file_path)] || []
       end
 
       # Clears the result cache. Useful for testing.
@@ -77,6 +78,7 @@ module Pronto
           'check',
           *Shellwords.split(@config.cmd_line_opts),
           '--reporter=json',
+          '--max-diagnostics=none',
           *file_paths
         ].reject(&:empty?)
       end
@@ -101,9 +103,26 @@ module Pronto
 
       def group_by_file(diagnostics)
         diagnostics.each_with_object(Hash.new { |h, k| h[k] = [] }) do |diagnostic, grouped|
-          path = diagnostic.dig('location', 'path', 'file')
-          grouped[path] << diagnostic if path
+          path = extract_path(diagnostic.dig('location', 'path'))
+          grouped[normalize_path(path)] << diagnostic if path
         end
+      end
+
+      # Biome 1.x returns { "file" => "path" }, while Biome 2.x returns
+      # the path directly as a string.
+      def extract_path(path)
+        return path if path.is_a?(String)
+        return path['file'] if path.is_a?(Hash)
+
+        nil
+      end
+
+      def normalize_path(path)
+        pathname = Pathname.new(path)
+        pathname = pathname.relative_path_from(Pathname.new(@repo_path).expand_path) if pathname.absolute?
+        pathname.cleanpath.to_s
+      rescue ArgumentError
+        path
       end
 
       def log_warning(message) = warn "[pronto-biome] #{message}"

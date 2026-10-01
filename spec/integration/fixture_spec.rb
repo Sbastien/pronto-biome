@@ -51,7 +51,9 @@ RSpec.describe 'Fixture-based integration', :integration do
       end
 
       it 'detects constant conditions' do
-        constant_msg = messages.find { |m| m.msg.include?('constant condition') }
+        constant_msg = messages.find do |m|
+          m.msg.include?('constant condition') || m.msg.include?('noConstantCondition')
+        end
         expect(constant_msg).not_to be_nil
       end
     end

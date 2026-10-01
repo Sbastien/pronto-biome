@@ -24,6 +24,8 @@ module Pronto
         nil
       end
 
+      def first_added_line = @patch.added_lines.first
+
       private
 
       def index_added_lines

@@ -14,13 +14,25 @@ RSpec.describe 'Biome output integration', :integration do
   def run_biome(file_content, filename: 'test.js')
     file_path = File.join(temp_dir, filename)
     File.write(file_path, file_content)
+    write_biome_config unless File.exist?(File.join(temp_dir, 'biome.json'))
 
-    output = `#{biome_executable} check --reporter=json #{file_path} 2>/dev/null`
+    output, = Open3.capture3(biome_executable, 'check', '--reporter=json', file_path, chdir: temp_dir)
     return nil if output.empty?
 
     JSON.parse(output)
   rescue JSON::ParserError
     nil
+  end
+
+  def write_biome_config
+    config = {
+      'linter' => {
+        'rules' => {
+          'correctness' => { 'noUnusedVariables' => 'warn' }
+        }
+      }
+    }
+    File.write(File.join(temp_dir, 'biome.json'), config.to_json)
   end
 
   describe 'stderr noise' do
@@ -32,7 +44,7 @@ RSpec.describe 'Biome output integration', :integration do
 
       # When this test fails, Biome has fixed the warning and we can simplify
       # the stderr handling in lib/pronto/biome/executor.rb
-      expect(stderr).to include('--json option is unstable')
+      expect(stderr).to match(/unstable|experimental/)
     end
   end
 
@@ -52,26 +64,30 @@ RSpec.describe 'Biome output integration', :integration do
       expect(result['diagnostics']).to be_an(Array)
     end
 
-    it 'includes location with span and sourceCode' do
+    it 'includes a supported location format' do
       result = run_biome(code_with_unused_var)
       skip 'Biome not available' if result.nil?
       skip 'No diagnostics returned' if result['diagnostics'].empty?
 
-      diagnostic = result['diagnostics'].first
-      expect(diagnostic).to have_key('location')
-      expect(diagnostic['location']).to have_key('span')
-      expect(diagnostic['location']).to have_key('sourceCode')
+      location = result['diagnostics'].first.fetch('location')
+      biome_v1_location = location.key?('span') && location.key?('sourceCode')
+      biome_v2_location = location.key?('start') && location.key?('end')
+
+      expect(biome_v1_location || biome_v2_location).to be true
     end
 
-    it 'span is an array of two integers' do
+    it 'uses valid position values' do
       result = run_biome(code_with_unused_var)
       skip 'Biome not available' if result.nil?
       skip 'No diagnostics returned' if result['diagnostics'].empty?
 
-      span = result['diagnostics'].first.dig('location', 'span')
-      expect(span).to be_an(Array)
-      expect(span.length).to eq(2)
-      expect(span).to all(be_an(Integer))
+      location = result['diagnostics'].first.fetch('location')
+      if location['span']
+        expect(location['span']).to match([an_instance_of(Integer), an_instance_of(Integer)])
+      else
+        expect(location.dig('start', 'line')).to be_an(Integer)
+        expect(location.dig('end', 'line')).to be_an(Integer)
+      end
     end
 
     it 'is parseable by our Offense class' do
@@ -93,7 +109,7 @@ RSpec.describe 'Biome output integration', :integration do
       'const x=1;const y=2;'
     end
 
-    it 'produces format diagnostics with diff structure' do
+    it 'produces format diagnostics with advice data' do
       # Need biome.json to enable formatting checks
       biome_config = File.join(temp_dir, 'biome.json')
       File.write(biome_config, '{"formatter":{"enabled":true}}')
@@ -105,7 +121,8 @@ RSpec.describe 'Biome output integration', :integration do
       skip 'No format diagnostic returned' if format_diagnostic.nil?
 
       expect(format_diagnostic).to have_key('advices')
-      expect(format_diagnostic.dig('advices', 'advices')).to be_an(Array)
+      advices = format_diagnostic['advices']
+      expect(advices.is_a?(Array) || advices['advices'].is_a?(Array)).to be true
     end
   end
 

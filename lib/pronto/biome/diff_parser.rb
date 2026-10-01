@@ -18,7 +18,7 @@ module Pronto
       attr_reader :first_change_line, :changes
 
       def initialize(diagnostic)
-        @diff = diagnostic.dig('advices', 'advices', 0, 'diff')
+        @diff = extract_diff(diagnostic['advices'])
         @first_change_line = 1
         @changes = []
         @found_first_change = false
@@ -29,6 +29,12 @@ module Pronto
       def valid? = !@diff.nil? && @diff.key?('dictionary') && @diff.key?('ops')
 
       private
+
+      def extract_diff(advices)
+        return unless advices.is_a?(Hash)
+
+        advices.fetch('advices', []).find { |advice| advice.is_a?(Hash) && advice['diff'] }&.fetch('diff')
+      end
 
       def parse
         @current_line = 1

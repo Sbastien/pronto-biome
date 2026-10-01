@@ -22,6 +22,13 @@ RSpec.describe Pronto::Biome::Executor do
     }
   end
 
+  def diagnostic_v2(file_path, category = 'lint/test')
+    {
+      'category' => category,
+      'location' => { 'path' => file_path }
+    }
+  end
+
   describe '#run' do
     before do
       allow(Dir).to receive(:chdir).and_yield
@@ -42,8 +49,8 @@ RSpec.describe Pronto::Biome::Executor do
       it 'groups diagnostics by file path' do
         result = executor.run(['/tmp/repo/app.js', '/tmp/repo/utils.js'])
 
-        expect(result['/tmp/repo/app.js'].size).to eq(2)
-        expect(result['/tmp/repo/utils.js'].size).to eq(1)
+        expect(result['app.js'].size).to eq(2)
+        expect(result['utils.js'].size).to eq(1)
       end
 
       it 'provides diagnostics_for specific file' do
@@ -52,6 +59,33 @@ RSpec.describe Pronto::Biome::Executor do
         expect(executor.diagnostics_for('/tmp/repo/app.js').size).to eq(2)
         expect(executor.diagnostics_for('/tmp/repo/utils.js').size).to eq(1)
         expect(executor.diagnostics_for('/tmp/repo/unknown.js')).to eq([])
+      end
+    end
+
+    context 'with Biome 2.x paths' do
+      let(:output) do
+        {
+          'diagnostics' => [
+            diagnostic_v2('app.js', 'lint/error1'),
+            diagnostic_v2('./app.js', 'lint/error2')
+          ]
+        }.to_json
+      end
+
+      it 'groups and normalizes string paths' do
+        executor.run(['app.js'])
+
+        expect(executor.diagnostics_for('app.js').size).to eq(2)
+      end
+    end
+
+    context 'with an absolute path inside the repository' do
+      let(:output) { { 'diagnostics' => [diagnostic('/tmp/repo/app.js')] }.to_json }
+
+      it 'matches diagnostics using a repository-relative path' do
+        executor.run(['app.js'])
+
+        expect(executor.diagnostics_for('app.js').size).to eq(1)
       end
     end
 
@@ -184,7 +218,9 @@ RSpec.describe Pronto::Biome::Executor do
     context 'with single file' do
       it 'builds correct command' do
         executor.run(['/tmp/repo/app.js'])
-        expect(Open3).to have_received(:capture3).with('biome', 'check', '--reporter=json', '/tmp/repo/app.js')
+        expect(Open3).to have_received(:capture3).with(
+          'biome', 'check', '--reporter=json', '--max-diagnostics=none', '/tmp/repo/app.js'
+        )
       end
     end
 
@@ -192,7 +228,7 @@ RSpec.describe Pronto::Biome::Executor do
       it 'includes all files in command' do
         executor.run(['/tmp/repo/app.js', '/tmp/repo/utils.js'])
         expect(Open3).to have_received(:capture3).with(
-          'biome', 'check', '--reporter=json', '/tmp/repo/app.js', '/tmp/repo/utils.js'
+          'biome', 'check', '--reporter=json', '--max-diagnostics=none', '/tmp/repo/app.js', '/tmp/repo/utils.js'
         )
       end
     end
@@ -203,7 +239,7 @@ RSpec.describe Pronto::Biome::Executor do
       it 'builds correct command' do
         executor.run(['/tmp/repo/app.js'])
         expect(Open3).to have_received(:capture3).with(
-          'yarn', '--silent', 'biome', 'check', '--reporter=json', '/tmp/repo/app.js'
+          'yarn', '--silent', 'biome', 'check', '--reporter=json', '--max-diagnostics=none', '/tmp/repo/app.js'
         )
       end
     end
@@ -214,7 +250,7 @@ RSpec.describe Pronto::Biome::Executor do
       it 'includes options in command' do
         executor.run(['/tmp/repo/app.js'])
         expect(Open3).to have_received(:capture3).with(
-          'biome', 'check', '--config-path=custom.json', '--reporter=json', '/tmp/repo/app.js'
+          'biome', 'check', '--config-path=custom.json', '--reporter=json', '--max-diagnostics=none', '/tmp/repo/app.js'
         )
       end
     end
@@ -223,7 +259,7 @@ RSpec.describe Pronto::Biome::Executor do
       it 'passes paths as separate arguments (no escaping needed)' do
         executor.run(['/tmp/repo/my file.js', '/tmp/repo/other file.js'])
         expect(Open3).to have_received(:capture3).with(
-          'biome', 'check', '--reporter=json', '/tmp/repo/my file.js', '/tmp/repo/other file.js'
+          'biome', 'check', '--reporter=json', '--max-diagnostics=none', '/tmp/repo/my file.js', '/tmp/repo/other file.js'
         )
       end
     end
