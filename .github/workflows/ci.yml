@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         ruby-version: ['3.1', '4.0']
+        biome-version: ['1.9.4', '2.5.15']
 
     steps:
       - uses: actions/checkout@v6
@@ -23,7 +24,7 @@ jobs:
           bundler-cache: true
 
       - name: Install Biome
-        run: npm install -g @biomejs/biome
+        run: npm install -g @biomejs/biome@${{ matrix.biome-version }}
 
       - name: Run tests
         run: bundle exec rspec

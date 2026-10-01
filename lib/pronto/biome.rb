@@ -52,11 +52,17 @@ module Pronto
         offense = Offense.new(diagnostic)
         next unless offense.valid?
 
-        added_line = resolver.find_in_range(offense.line_range)
+        added_line = added_line_for(offense, resolver)
         next unless added_line
 
         new_message(offense, added_line)
       end
+    end
+
+    def added_line_for(offense, resolver)
+      return resolver.first_added_line if offense.file_wide?
+
+      resolver.find_in_range(offense.line_range)
     end
 
     def new_message(offense, line)

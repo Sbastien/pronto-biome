@@ -61,6 +61,63 @@ RSpec.describe Pronto::Biome do
       end
     end
 
+    context 'with a Biome 2 lint diagnostic' do
+      let(:patch) { create_patch('app.js', added_lines: [5]) }
+      let(:patches) { [patch] }
+      let(:biome_output) do
+        {
+          'diagnostics' => [{
+            'category' => 'lint/test',
+            'severity' => 'warning',
+            'message' => 'Biome 2 diagnostic',
+            'location' => {
+              'path' => 'app.js',
+              'start' => { 'line' => 5, 'column' => 1 },
+              'end' => { 'line' => 5, 'column' => 2 }
+            }
+          }]
+        }.to_json
+      end
+
+      before { stub_biome(biome_output) }
+
+      it 'reports the diagnostic with its message' do
+        message = runner.run.first
+
+        expect(message.line.new_lineno).to eq(5)
+        expect(message.msg).to eq('lint/test: Biome 2 diagnostic')
+      end
+    end
+
+    context 'with a file-wide Biome 2 format diagnostic' do
+      let(:patch) { create_patch('app.js', added_lines: [5, 10]) }
+      let(:patches) { [patch] }
+      let(:biome_output) do
+        {
+          'diagnostics' => [{
+            'category' => 'format',
+            'severity' => 'error',
+            'message' => 'Formatter would have printed different content.',
+            'location' => {
+              'path' => 'app.js',
+              'start' => { 'line' => 0, 'column' => 0 },
+              'end' => { 'line' => 0, 'column' => 0 }
+            },
+            'advices' => []
+          }]
+        }.to_json
+      end
+
+      before { stub_biome(biome_output) }
+
+      it 'attaches the diagnostic to the first added line' do
+        message = runner.run.first
+
+        expect(message.line.new_lineno).to eq(5)
+        expect(message.msg).to include('File needs formatting')
+      end
+    end
+
     context 'when offense is NOT on an added line' do
       let(:patch) { create_patch('app.js', added_lines: [10, 11, 12]) }
       let(:patches) { [patch] }

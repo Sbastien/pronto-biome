@@ -14,6 +14,11 @@ RSpec.describe Pronto::Biome::Offense do
       expect(offense.valid?).to be true
     end
 
+    it 'is valid with Biome 2 positions' do
+      offense = described_class.new(lint_diagnostic_v2(line: 5))
+      expect(offense.valid?).to be true
+    end
+
     it 'is invalid without span or sourceCode' do
       offense = described_class.new({ 'category' => 'lint/test', 'location' => {} })
       expect(offense.valid?).to be false
@@ -45,7 +50,26 @@ RSpec.describe Pronto::Biome::Offense do
     it 'defaults to line 1 for format diagnostic without diff' do
       diagnostic = { 'category' => 'format', 'location' => {}, 'advices' => { 'advices' => [] } }
       offense = described_class.new(diagnostic)
-      expect(offense.line_range).to eq(1..1)
+      expect(offense).to be_file_wide
+      expect(offense.line_range).to be_nil
+    end
+
+    it 'uses line positions from Biome 2' do
+      offense = described_class.new(lint_diagnostic_v2(line: 5, end_line: 8))
+      expect(offense.line_range).to eq(5..8)
+    end
+
+    it 'uses byte offsets for Biome 1 diagnostics with multibyte source' do
+      source_code = "éééééééééé\nsecond line\ndebugger;\n"
+      start_offset = source_code.b.index('debugger')
+      diagnostic = {
+        'location' => {
+          'span' => [start_offset, start_offset + 'debugger'.bytesize],
+          'sourceCode' => source_code
+        }
+      }
+
+      expect(described_class.new(diagnostic).line_range).to eq(3..3)
     end
   end
 
@@ -76,6 +100,11 @@ RSpec.describe Pronto::Biome::Offense do
       expect(described_class.new(diagnostic).message).to eq('Error')
     end
 
+    it 'uses the message string returned by Biome 2' do
+      offense = described_class.new(lint_diagnostic_v2(line: 1, message: 'Bad'))
+      expect(offense.message).to eq('lint/test: Bad')
+    end
+
     it 'describes format changes with actionable message' do
       offense = described_class.new(format_diagnostic(delete_text: ';'))
       expect(offense.message).to include('remove')
@@ -102,6 +131,19 @@ RSpec.describe Pronto::Biome::Offense do
       'location' => {
         'span' => [start_offset, start_offset + 5],
         'sourceCode' => source_code
+      }
+    }
+  end
+
+  def lint_diagnostic_v2(line:, end_line: line, category: 'lint/test', message: 'Test error', severity: 'warning')
+    {
+      'category' => category,
+      'severity' => severity,
+      'message' => message,
+      'location' => {
+        'path' => 'app.js',
+        'start' => { 'line' => line, 'column' => 1 },
+        'end' => { 'line' => end_line, 'column' => 2 }
       }
     }
   end

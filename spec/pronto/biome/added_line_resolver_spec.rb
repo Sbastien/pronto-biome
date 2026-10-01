@@ -71,4 +71,13 @@ RSpec.describe Pronto::Biome::AddedLineResolver do
       end
     end
   end
+
+  describe '#first_added_line' do
+    let(:first_line) { line(5) }
+    let(:added_lines) { [first_line, line(10)] }
+
+    it 'returns the first added line in the patch' do
+      expect(resolver.first_added_line).to eq(first_line)
+    end
+  end
 end

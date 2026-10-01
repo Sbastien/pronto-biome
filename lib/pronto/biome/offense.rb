@@ -29,22 +29,26 @@ module Pronto
         @message = compute_message
       end
 
-      def valid? = !@line_range.nil?
+      def valid? = file_wide? || !@line_range.nil?
+
+      def file_wide? = @file_wide == true
 
       private
 
       def compute_line_range
-        if span
-          line_range_from_span
-        elsif format_diagnostic?
-          line = diff_parser.first_change_line
-          line..line
-        end
+        positioned_range = line_range_from_position if position
+        return positioned_range if positioned_range
+        return line_range_from_span if span
+        return line_range_from_diff if format_diagnostic?
+
+        nil
       end
 
       def span = @diagnostic.dig('location', 'span')
 
       def source_code = @diagnostic.dig('location', 'sourceCode')
+
+      def position = @diagnostic.dig('location', 'start')
 
       def format_diagnostic? = @diagnostic['category'] == 'format'
 
@@ -57,10 +61,29 @@ module Pronto
         return nil unless source_code
 
         start_offset, end_offset = span
-        start_line = source_code[0...start_offset].count("\n") + 1
-        end_line = source_code[0...end_offset].count("\n") + 1
+        start_line = source_code.byteslice(0...start_offset).count("\n") + 1
+        end_line = source_code.byteslice(0...end_offset).count("\n") + 1
 
         start_line..end_line
+      end
+
+      def line_range_from_position
+        start_line = position['line']
+        end_line = @diagnostic.dig('location', 'end', 'line') || start_line
+        return nil unless start_line.is_a?(Integer) && start_line.positive?
+
+        end_line = start_line unless end_line.is_a?(Integer) && end_line.positive?
+        start_line..[start_line, end_line].max
+      end
+
+      def line_range_from_diff
+        if diff_parser.valid?
+          line = diff_parser.first_change_line
+          line..line
+        else
+          @file_wide = true
+          nil
+        end
       end
 
       def compute_level = SEVERITY_MAP.fetch(@diagnostic['severity'], DEFAULT_SEVERITY)
@@ -69,7 +92,7 @@ module Pronto
 
       def lint_message
         category = @diagnostic['category'] || ''
-        description = @diagnostic['description'] || ''
+        description = @diagnostic['description'] || @diagnostic['message'] || ''
         category.empty? ? description : "#{category}: #{description}"
       end
 

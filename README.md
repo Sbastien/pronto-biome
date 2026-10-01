@@ -65,7 +65,7 @@ biome_executable: ./node_modules/.bin/biome
 |------------|-------------|
 | Ruby       | >= 3.1      |
 | Pronto     | ~> 0.11.0   |
-| Biome      | Any version |
+| Biome      | 1.9 or 2.x  |
 
 ## Contributing
 

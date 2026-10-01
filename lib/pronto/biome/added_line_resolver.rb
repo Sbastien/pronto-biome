@@ -24,12 +24,12 @@ module Pronto
         nil
       end
 
+      def first_added_line = @patch.added_lines.first
+
       private
 
       def index_added_lines
-        @patch.added_lines.each_with_object({}) do |line, hash|
-          hash[line.new_lineno] = line
-        end
+        @patch.added_lines.to_h { |line| [line.new_lineno, line] }
       end
     end
   end
